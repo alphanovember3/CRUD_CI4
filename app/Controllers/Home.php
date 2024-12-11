@@ -67,6 +67,8 @@ class Home extends BaseController
     }
 
     public function deleteUser(){
+
+        //this $id is coming from data section of the ajax 
         
         $id = $this->request->getVar('id');
        
@@ -76,5 +78,21 @@ class Home extends BaseController
         //here redirect function is not working so we are gonna send response to ajax and from there we will return the window
         //now we will return deleted
         echo "deleted";
+       
+    }
+
+    public function deleteMultiUser(){
+
+        $ids = $this->request->getVar('ids');
+
+        //now deleting the multiple users using loop
+
+        for($count = 0;$count< count($ids);$count++){
+            
+            $this->user->delete($ids[$count]);
+        }
+
+        echo "multideleted";
+
     }
 }
