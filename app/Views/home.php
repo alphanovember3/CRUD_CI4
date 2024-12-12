@@ -128,6 +128,20 @@
 			<a class="nav-item nav-link" href="#">Features</a>
 
 		</div>
+
+		
+<!-- input  -->
+
+<form class="form" action="<?php echo site_url('uploadfile')?>" method="post" enctype="multipart/form-data">
+<div class="mb-3 form-group myclass-defined">
+	
+	<input class="form-control" name="upload_file" type="file" id="upload_file" >
+	<button class="btn-success" type="submit">Upload</button>
+	<a class="btn-success" href="<?php echo site_url('downloadfile'); ?>" role="button" >Download</a>
+</div>
+
+</form>
+</div>
 	</div>
 </nav>
 
@@ -149,6 +163,19 @@
 				</button>
 			</div>
 		<?php } ?>
+
+		<?php
+		if (session()->getFlashdata("fail")) {
+
+
+		?>
+			<div class="alert w-50 align-self-center alert-danger alert-dismissible fade show" role="alert">
+				<?php echo session()->getFlashdata("fail"); ?>
+				<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+		<?php } ?>
 		<div class="table-wrapper">
 			<div class="table-title">
 				<div class="row">
@@ -161,7 +188,7 @@
 					</div>
 				</div>
 			</div>
-			<table class="table table-striped table-hover">
+			<table class="table table-striped table-hover" id="mydatatable">
 				<thead>
 					<tr>
 						<th>
@@ -214,11 +241,7 @@
 					?>
 				</tbody>
 			</table>
-			<div class="d-flex justify-content-center align-items-center">
-				<ul class="pagination">
-					<?= $pager->links('group1', 'bs_pagination'); ?>
-				</ul>
-			</div>
+			
 		</div>
 	</div>
 </div>

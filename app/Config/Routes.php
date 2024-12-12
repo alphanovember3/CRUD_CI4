@@ -11,4 +11,6 @@ $routes->get('/getSingleUser/(:num)','Home::getSingleUser/$1');
 $routes->post('/updateUser','Home::updateUser');
 $routes->post('/deleteUser','Home::deleteUser');
 $routes->post('/deleteMultiUser','Home::deleteMultiUser');
-
+$routes->get('/downloadfile','Home::downloadfile');
+$routes->match(['get','post'],'/uploadfile','Home::uploadfile');    
+$routes->get('/downloadfile','Home::downloadfile');  
