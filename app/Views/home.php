@@ -13,6 +13,8 @@
 			url: "<?php echo base_url(); ?>" + "/getSingleUser/" + id,
 			method: "GET",
 			success: function(result) {
+
+			//  result parameter contains the response from the server, which is expected to be a JSON string. It is parsed into a JavaScript object using JSON.parse(result).
 				var res = JSON.parse(result);
 
 				$(".updateUsername").val(res.username);
@@ -127,9 +129,7 @@
 			<a class="nav-item nav-link active" href="#">Home <span class="sr-only">(current)</span></a>
 			<a class="nav-item nav-link" href="#">Features</a>
 
-		</div>
-
-		
+		</div>		
 <!-- input  -->
 
 <form class="form" action="<?php echo site_url('uploadfile')?>" method="post" enctype="multipart/form-data">
@@ -138,6 +138,11 @@
 	<input class="form-control" name="upload_file" type="file" id="upload_file" >
 	<button class="btn-success" type="submit">Upload</button>
 	<a class="btn-success" href="<?php echo site_url('downloadfile'); ?>" role="button" >Download</a>
+	<a class="btn-danger" href="/logout" role="button" >Logout</a>
+</div> 
+
+<div class="mb-3 form-group myclass-defined">
+	
 </div>
 
 </form>

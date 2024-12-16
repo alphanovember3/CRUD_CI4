@@ -43,6 +43,12 @@ class Autoload extends AutoloadConfig
         APP_NAMESPACE => APPPATH,
     ];
 
+
+
+    public $autoload = [
+        'libraries' => ['session'],
+    ];
+
     /**
      * -------------------------------------------------------------------
      * Class Map

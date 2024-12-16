@@ -3,28 +3,41 @@
 namespace App\Controllers;
 
 // this files and libs imported for the file upload and download
-// require FCPATH.'vendor/autoload.php';
 
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use App\Controllers\Zip;
-
+use PhpOffice\PhpSpreadsheet\Writer\Ods\Content;
+use CodeIgniter\Password\Password;
+use CodeIgniter\I18n\Time;
 
 use App\Models\UserModel;
-use PhpOffice\PhpSpreadsheet\Writer\Ods\Content;
+use App\Models\LoginModel;
 
 class Home extends BaseController
 {
   protected $user;
+  protected $loginUser;
     public function __construct()
     {
 
         helper(['url']);
         $this->user = new UserModel();
+
         
     }
     public function index()
     {
+
+        $session = session();
+
+        // Check if the user is logged in
+        if (!$session->get('isLoggedIn')) {
+            return redirect()->to('/login'); // Redirect to login if not logged in
+        }
+
+
+        // view the web page
         echo view('/inc/header');
         $data['users'] = $this->user->paginate(25,'group1');
         $data['pager'] = $this->user->pager;
@@ -129,6 +142,11 @@ class Home extends BaseController
     $writer->save("php://output");
     }
 
+
+
+
+
+    
     //upload a excel file into database
 
     public function uploadfile(){
@@ -203,4 +221,7 @@ class Home extends BaseController
         return redirect()->to(base_url());
         
     }
+    
+    
+
 }

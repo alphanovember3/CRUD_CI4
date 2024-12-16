@@ -12,5 +12,13 @@ $routes->post('/updateUser','Home::updateUser');
 $routes->post('/deleteUser','Home::deleteUser');
 $routes->post('/deleteMultiUser','Home::deleteMultiUser');
 $routes->get('/downloadfile','Home::downloadfile');
-$routes->match(['get','post'],'/uploadfile','Home::uploadfile');    
-$routes->get('/downloadfile','Home::downloadfile');  
+$routes->match(['get','post'],'/uploadfile','Home::uploadfile');   
+
+// Authentication routes
+
+$routes->match(['get','post'],'/login','Auth::login');
+// $routes->get('/register','Home::register');
+$routes->match(['get','post'],'/register','Auth::register');
+
+$routes->get('/logout','Auth::logout');
+ 
