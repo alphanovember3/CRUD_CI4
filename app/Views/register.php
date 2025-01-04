@@ -58,6 +58,15 @@
     <label for="exampleInputPassword1">Password</label>
     <input type="password" class="form-control" id="exampleInputPassword1" placeholder="Password" name="password">
   </div>
+
+ 
+  <label for="exampleInputPassword1">Roles:</label>
+  <select class="form-select my-3" aria-label="Default select example" name= "role">
+  <option selected value="1">Admin</option>
+  <option value="2">Supervisor</option>
+  <option value="3">Teamleader</option>
+  <option value="4">Agent</option>
+</select>
   <?php if(isset($validation)){ ?>
     <div class="col-12">
         <div class="alert alert-danger" role="alert">

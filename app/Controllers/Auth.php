@@ -33,7 +33,7 @@ class Auth extends BaseController{
 
     public function login(){
 
-        
+        //fetch session
         $session = session();
           // Check if the user is logged in
           if ($session->get('isLoggedIn')) {
@@ -50,6 +50,8 @@ class Auth extends BaseController{
 
         $email = $this->request->getVar('email');
         $password = $this->request->getVar('password');
+        
+        
 
         //fetch and check if user is there in database
 
@@ -67,12 +69,14 @@ class Auth extends BaseController{
             $sessionData = [
               
                 'email' => $email,
+                'firstname'=> $isUser['firstname'],
                 'isLoggedIn' => true,
             ];
 
             // Set session data
             session()->set($sessionData);
 
+              
                 return redirect()->to('/');
             }
             else {
@@ -101,10 +105,11 @@ class Auth extends BaseController{
         }
 
         helper(['form']);
-
     
         $data = [];
         $validation = \Config\Services::validation();
+
+        // if user submit data
         if($this->request->getMethod()=='POST'){
 
            
@@ -134,7 +139,9 @@ class Auth extends BaseController{
         $psd = $this->request->getVar('password');
         $password = password_hash($psd,PASSWORD_DEFAULT);
 
-        $this->loginUser->save(["firstname" => $firstname,"lastname"=>$lastname,"email"=>$email,"password"=>$password]);
+        $role = $this->request->getVar('role');
+
+        $this->loginUser->save(["firstname" => $firstname,"lastname"=>$lastname,"email"=>$email,"password"=>$password,"role"=>$role]);
         session()->setFlashdata("register","successfully register now you can login ");
        
         return redirect()->to('/login');
@@ -164,22 +171,6 @@ public function logout()
 
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

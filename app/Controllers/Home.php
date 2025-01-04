@@ -4,26 +4,30 @@ namespace App\Controllers;
 
 // this files and libs imported for the file upload and download
 
-use PhpOffice\PhpSpreadsheet\Spreadsheet;
-use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
-use App\Controllers\Zip;
-use PhpOffice\PhpSpreadsheet\Writer\Ods\Content;
-use CodeIgniter\Password\Password;
-use CodeIgniter\I18n\Time;
-
 use App\Models\UserModel;
 use App\Models\LoginModel;
+use App\Models\AccessModel;
+
+
 
 class Home extends BaseController
 {
-  protected $user;
-  protected $loginUser;
+    protected $user;
+    protected $loginUser;
+    protected $accessUser;
+    protected $pager;
+    
+    
     public function __construct()
     {
-
+        
         helper(['url']);
         $this->user = new UserModel();
-
+        
+        $this->loginUser = new LoginModel();
+        $this->accessUser = new AccessModel();
+        $this->pager = \Config\Services::pager();
+       
         
     }
     public function index()
@@ -31,28 +35,93 @@ class Home extends BaseController
 
         $session = session();
 
+        $firstname = session()->get('firstname');
+
+        
+
         // Check if the user is logged in
         if (!$session->get('isLoggedIn')) {
             return redirect()->to('/login'); // Redirect to login if not logged in
         }
 
-
-        // view the web page
-        echo view('/inc/header');
-        $data['users'] = $this->user->paginate(25,'group1');
-        $data['pager'] = $this->user->pager;
+        //access levels sql query
         
-        echo view('home',$data);
-        echo view('/inc/footer');
+        
+        
+        
+        $data['pagename'] = 'home';
+        
+
+        
+        // Database connection 
+        $db = \Config\Database::connect();
+
+$page = $this->request->getVar('page') ? $this->request->getVar('page') : 1; 
+
+// Number of records per page
+$perPage = 3; 
+// Calculate the offset 
+$offset = ($page - 1) * $perPage; 
+// Custom query with LIMIT and OFFSET 
+
+$filterdata = $this->request->getGet('role');
+
+$search = $this->request->getGet('search');
+
+if($filterdata){
+    
+    // $query = "SELECT *, (SELECT level FROM accesslevel WHERE accesslevel.id = users.role) as accessname FROM users WHERE users.role = $filterdata LIMIT $perPage OFFSET $offset"; 
+    $query = "SELECT *, (SELECT level FROM accesslevel WHERE accesslevel.id = users.role) as accessname FROM users WHERE users.role = $filterdata"; 
+    if (!empty($search)) {
+         $query .= " AND (users.email LIKE '%$search%')";
+     } 
+    $query .= " LIMIT $perPage OFFSET $offset";
+
+
+
+}
+else if($search){
+
+    $query = "SELECT *, (SELECT level FROM accesslevel WHERE accesslevel.id = users.role) as accessname FROM users WHERE users.email LIKE '%$search%' LIMIT $perPage OFFSET $offset";
+
+}
+else{
+    
+    $query = "SELECT *, (SELECT level FROM accesslevel WHERE accesslevel.id = users.role) as accessname FROM users LIMIT $perPage OFFSET $offset"; 
+}
+
+// Get the total number of rows for pagination 
+$totalRows = $db->query("SELECT COUNT(*) as count FROM users")->getRow()->count; 
+// Execute the query 
+$resultTable = $db->query($query); 
+$result = $resultTable->getResult(); 
+// Load Pagination library 
+$pager = \Config\Services::pager(); 
+
+$role = session()->get('role');
+// session()->set('role', $newRole);
+
+
+
+
+$data['pagedata'] = [ 'accessuser' => $result, 'pager' => $pager->makeLinks($page, $perPage, $totalRows, 'default_full'),'filterdata'=>$filterdata];
+
+
+
+        echo view('template',$data);
+
+        
     }
 
+
+    //function for save user
     public function saveUser(){
 
         $username = $this->request->getVar('username');
-        $email = $this->request->getVar('email');
+        $role = $this->request->getVar('email');
 
-        $this->user->save(["username" => $username, "email"=>$email]);
-
+        $this->user->save(["email" => $username, "role"=>$role]);
+        
         session()->setFlashdata("success","data inserted successfully");
         return redirect()->to(base_url());
     }
@@ -67,23 +136,27 @@ class Home extends BaseController
         echo json_encode($data);
     }
 
+
+    //for update the user
     public function updateUser(){
         
         // now we will get the updated value of the variable by his name 
         $id = $this->request->getVar('updateId');
 
-        $username = $this->request->getVar('username');
+        $role = $this->request->getVar('role');
 
-        $email = $this->request->getVar('password');
+        $email = $this->request->getVar('username');
 
         // now we will store the updated value in the array
 
-        $data['username'] = $username;
+        $data['role'] = $role;
         $data['email'] = $email;
 
         //now we wiil update the data into database using update function
 
         $this->user->update($id,$data);
+
+       
         return redirect()->to(base_url());
 
     }
@@ -99,129 +172,56 @@ class Home extends BaseController
         // return redirect()->to(base_url());
         //here redirect function is not working so we are gonna send response to ajax and from there we will return the window
         //now we will return deleted
-        echo "deleted";
+        return "deleted";
        
     }
 
-    public function deleteMultiUser(){
+    // public function deleteMultiUser(){
 
-        $ids = $this->request->getVar('ids');
+    //     $ids = $this->request->getVar('ids');
 
-        //now deleting the multiple users using loop
+    //     //now deleting the multiple users using loop
 
-        for($count = 0;$count< count($ids);$count++){
+    //     for($count = 0;$count< count($ids);$count++){
             
-            $this->user->delete($ids[$count]);
-        }
+    //         $this->user->delete($ids[$count]);
+    //     }
 
-        echo "multideleted";
+    //     echo "multideleted";
 
-    }
-
-    //  for downloading the excel file 
-    public function downloadfile(){
-
-    header('Content-Type: application/vnd.ms-excel');
-    header('Content-Disposition: attachment;filename="hello.xlsx"');
-    $spreadsheet = new Spreadsheet();
-    $activeWorksheet = $spreadsheet->getActiveSheet();
-    $activeWorksheet->setCellValue('A1', 'Username');
-    $activeWorksheet->setCellValue('B1', 'Email');
-
-    $userData  = $this->user->findAll();
-    // print_r($userData);
-        $num =2;
-    foreach($userData as $data1){
-         
-        $activeWorksheet->setCellValue('A'.$num, $data1['username']);
-        $activeWorksheet->setCellValue('B'.$num, $data1['email']);   
-         $num++;
-    }
-
-    $writer = new Xlsx($spreadsheet);
-    $writer->save("php://output");
-    }
-
-
-
-
-
+    // } 
     
-    //upload a excel file into database
+  
 
-    public function uploadfile(){
+    // public function search(){
+    //      if ($this->request->getMethod() === 'post') { $selectedOption = $this->request->getPost('option'); 
+    //         // Fetch data based on the selected option 
+    //         $db = \Config\Database::connect();
+    //          $query = "SELECT *, (SELECT level FROM accesslevel WHERE accesslevel.id = users.role) as accessname FROM users"; 
+    //          $resultTable = $db->query($query); 
+    //          $result = $resultTable->getResult(); 
+    //          // Filter the results manually 
+    //          $filteredBooks = []; foreach ($result as $row) { if ($row->category == $selectedOption) { $filteredBooks[] = $row; } } 
+    //          // Send the data as JSON return
+    //         $this->response->setJSON($filteredBooks);
+    //      }
+    // }
 
-        //for selecting file by name tag from input section
-        
-        $upload_file = $_FILES['upload_file']['name'];
+    public function chatApp(){
 
-       //checking if user has enter a file or not
-        if($upload_file==""){
-            session()->setFlashdata("fail","Invalid data");
-            return redirect()->to(base_url());
-            
-            // Now you can access the user data as an array
-            
-            return;
-        } 
+        // echo view('inc/header');
+        $username['user'] =  session()->get('firstname');
        
+        echo view('chat',$username);
+        // echo view('inc/footer');
+    }
 
-        //to get the files extension
+    public function getChatUsername(){
 
-        $extension = pathinfo($upload_file,PATHINFO_EXTENSION);
+        $username =  session()->get('firstname');
 
-        //checking for diffrent type of files
-        if($extension=='csv'){
-            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Csv();
-        }
-
-        else if($extension == 'xls'){
-            $reader = new \PhpOffice\PhpSpreadsheet\Reader\xls();
-        }
-
-        else{
-            $reader = new \PhpOffice\PhpSpreadsheet\Reader\xlsx();
-        }
-
-        //from file we will get active sheet data 
-        $spreadsheet = $reader->load($upload_file = $_FILES['upload_file']['tmp_name']);
-
-        //later we are converting that data into array
-
-        $sheetdata = $spreadsheet->getActiveSheet()->toArray();
-        
-        $sheetcount = count($sheetdata);
-
-        // now we will iterate over the 2d array of the xl sheet
-
-        if($sheetcount>1){
-            
-           
-            for($i=1;$i < $sheetcount; $i++){
-                
-                 $username = $sheetdata[$i][0];
-             
-                 $email = $sheetdata[$i][1];
-
-               //now we are saving the data into the database
-                 $this->user->save(["username" => $username, "email"=>$email]);
-               
-            }
-
-            
-                session()->setFlashdata("success","data inserted successfully");
-           
-
-        }
-
-        if($sheetcount<=1){
-            session()->setFlashdata("fail","Invalid data");
-        }
-        // now redirecting to the home page
-        return redirect()->to(base_url());
+        return $this->response->setJSON(['username' => $username]);
         
     }
-    
-    
 
 }
